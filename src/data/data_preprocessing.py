@@ -25,8 +25,15 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-nltk.download('wordnet')
-nltk.download('stopwords')
+def download_nltk_resources():
+    try:
+        nltk.download('wordnet')
+        nltk.download('stopwords')
+        nltk.download('omw-1.4')
+        logger.debug('NLTK resources downloaded successfully')
+    except Exception as e:
+        logger.error('Error downloading NLTK resources: %s', e)
+        raise
 
 def lemmatization(text):
     """Lemmatize the text."""
@@ -74,17 +81,17 @@ def normalize_text(df):
     """Normalize the text data."""
     try:
         df['content'] = df['content'].apply(lower_case)
-        logger.debug('converted to lower case')
+        logger.debug('Converted to lower case')
         df['content'] = df['content'].apply(remove_stop_words)
-        logger.debug('stop words removed')
+        logger.debug('Stop words removed')
         df['content'] = df['content'].apply(removing_numbers)
-        logger.debug('numbers removed')
+        logger.debug('Numbers removed')
         df['content'] = df['content'].apply(removing_punctuations)
-        logger.debug('punctuations removed')
+        logger.debug('Punctuations removed')
         df['content'] = df['content'].apply(removing_urls)
-        logger.debug('urls')
+        logger.debug('URLs removed')
         df['content'] = df['content'].apply(lemmatization)
-        logger.debug('lemmatization performed')
+        logger.debug('Lemmatization performed')
         logger.debug('Text normalization completed')
         return df
     except Exception as e:
@@ -93,20 +100,30 @@ def normalize_text(df):
 
 def main():
     try:
+        download_nltk_resources()
+
         # Fetch the data from data/raw
+        logger.debug('Loading train data from ./data/raw/train.csv')
         train_data = pd.read_csv('./data/raw/train.csv')
+        logger.debug('Loading test data from ./data/raw/test.csv')
         test_data = pd.read_csv('./data/raw/test.csv')
-        logger.debug('data loaded properly')
+        logger.debug('Data loaded properly')
 
         # Transform the data
+        logger.debug('Starting normalization of train data')
         train_processed_data = normalize_text(train_data)
-        test_processed_data = normalize_text(test_data)
+        logger.debug('Normalization of train data completed')
 
-        # Store the data inside data/processed
+        logger.debug('Starting normalization of test data')
+        test_processed_data = normalize_text(test_data)
+        logger.debug('Normalization of test data completed')
+
+        # Store the data inside data/interim
         data_path = os.path.join("./data", "interim")
         os.makedirs(data_path, exist_ok=True)
-        
+        logger.debug('Saving processed train data to %s', os.path.join(data_path, "train_processed.csv"))
         train_processed_data.to_csv(os.path.join(data_path, "train_processed.csv"), index=False)
+        logger.debug('Saving processed test data to %s', os.path.join(data_path, "test_processed.csv"))
         test_processed_data.to_csv(os.path.join(data_path, "test_processed.csv"), index=False)
         
         logger.debug('Processed data saved to %s', data_path)
