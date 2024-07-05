@@ -72,7 +72,7 @@ def apply_tfidf(train_data: pd.DataFrame, test_data: pd.DataFrame, max_features:
         test_df = pd.DataFrame(X_test_bow.toarray())
         test_df['label'] = y_test
 
-        logger.debug('Bag of Words applied and data transformed')
+        logger.debug('TfIdf applied and data transformed')
         return train_df, test_df
     except Exception as e:
         logger.error('Error during Bag of Words transformation: %s', e)
